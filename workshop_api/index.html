@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Product Manager</title>
+<style>
+body {
+    font-family: "Segoe UI", sans-serif;
+    background: linear-gradient(135deg,#6a11cb,#2575fc);
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+}
+
+.form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.form input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+
+.form button {
+    background: #2575fc;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.form button:hover {
+    background: #1a5ed8;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background: #2575fc;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background: #f2f2f2;
+}
+
+button.edit {
+    background: #fbc531;
+    color: black;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button.delete {
+    background: #e84118;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button.edit:hover {background:#e1a400;}
+button.delete:hover {background:#c23616;}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h2>📦 ระบบจัดการสินค้า</h2>
+
+<div class="form">
+    <input type="hidden" id="product_id">
+    <input type="text" id="name" placeholder="ชื่อสินค้า">
+    <input type="number" id="price" placeholder="ราคา">
+    <button onclick="saveProduct()">บันทึก</button>
+</div>
+
+<table>
+<thead>
+<tr>
+    <th>ID</th>
+    <th>ชื่อสินค้า</th>
+    <th>ราคา</th>
+    <th>จัดการ</th>
+</tr>
+</thead>
+<tbody id="productTable"></tbody>
+</table>
+</div>
+
+<script>
+const api = "https://hosting.udru.ac.th/~it67040233126/workshop_api/api/products.php";
+
+function loadProducts() {
+fetch(api)
+.then(res => res.json())
+.then(data => {
+    let html = "";
+    data.forEach(p => {
+        html += `
+        <tr>
+            <td>${p.id}</td>
+            <td>${p.product_name}</td>
+            <td>${p.price}</td>
+            <td>
+                <button class="edit" onclick="editProduct(${p.id},'${p.product_name}',${p.price})">แก้ไข</button>
+                <button class="delete" onclick="deleteProduct(${p.id})">ลบ</button>
+            </td>
+        </tr>`;
+    });
+    document.getElementById("productTable").innerHTML = html;
+});
+}
+
+function saveProduct() {
+const id = document.getElementById("product_id").value;
+const name = document.getElementById("name").value;
+const price = document.getElementById("price").value;
+
+if(id) {
+    // update
+    fetch(api, {
+        method: "PUT",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({id:id, product_name:name, price:price})
+    }).then(()=>resetForm());
+} else {
+    // insert
+    fetch(api, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({product_name:name, price:price})
+    }).then(()=>resetForm());
+}
+}
+
+function editProduct(id,name,price) {
+document.getElementById("product_id").value = id;
+document.getElementById("name").value = name;
+document.getElementById("price").value = price;
+}
+
+function deleteProduct(id) {
+if(confirm("ต้องการลบใช่หรือไม่?")) {
+    fetch(api, {
+        method: "DELETE",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({id:id})
+    }).then(()=>loadProducts());
+}
+}
+
+function resetForm() {
+document.getElementById("product_id").value="";
+document.getElementById("name").value="";
+document.getElementById("price").value="";
+loadProducts();
+}
+
+loadProducts();
+</script>
+</body>
+</html>
